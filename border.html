@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>border</title>
+  <style media="screen">
+    html,
+    body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    canvas[resize] {
+      width: 100%;
+      height: 100%;
+      background: #00D2B7;
+    }
+  </style>
+  <!-- Load the Paper.js library -->
+  <script type="text/javascript"
+src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- Define inlined PaperScript associate it with myCanvas -->
+  <script type="text/paperscript" canvas="myCanvas">
+
+  var width = $('canvas').width();
+  var height = $('canvas').height();
+  var points = 4;
+  var topleft = new Point(0, 0);
+  var topright = new Point(width, 0);
+  var velocity = [];
+  var targetY = [];
+  var path = new Path();
+  var selected = false;
+
+  function makeBorder() {
+    for(var i = 0; i < points + 1; i++) {
+      var randPoint = new Point(width / points * i, Math.random() * height);
+      path.add(randPoint);
+    }
+    path.add(topright);
+    path.add(topleft);
+
+    for(var i = 0; i < points + 1; i++) {
+      targetY[i] = Math.random() * height;
+      updateVelocity();
+    }
+    path.closed = true;
+    path.fillColor = '#FF0091';
+  }
+  makeBorder();
+
+  function updateVelocity() {
+    for(var i = 0; i < points + 1; i++) {
+      if(targetY[i] > path.segments[i].point.y) {
+        velocity[i] = (targetY[i] - path.segments[i].point.y) / 100 + 0.5;
+      } else {
+        velocity[i] = (targetY[i] - path.segments[i].point.y) / 100 - 0.5;
+      }
+    }
+  }
+
+  function onFrame(){
+    for(var i = 0; i < points + 1; i++) {
+      if(Math.abs(targetY[i] - path.segments[i].point.y) < 10) {
+        targetY[i] = Math.random() * height;
+      }
+      updateVelocity();
+      path.segments[i].point.y += velocity[i];
+      path.smooth({from: 0, to: points});
+    }
+  }
+
+  function onMouseDown(event) {
+    selected = !selected;
+    if (selected) {
+      path.fullySelected = true;
+    } else {
+      path.fullySelected = false;
+    }
+  }
+
+  $(window).resize(function(){
+    width = $('canvas').width();
+    height = $('canvas').height();
+
+    for(var i = 0; i < points + 1; i++) {
+      path.segments[i].point.x = width / points * i;
+    }
+    path.segments[points + 1].point.x = width;
+
+  });
+
+  </script>
+</head>
+<body>
+  <canvas id="myCanvas" style="border: 1px solid black" resize></canvas>
+</body>
+</html>
